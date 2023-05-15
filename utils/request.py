@@ -27,7 +27,7 @@ import numpy as np
 # from the Kaggle challenge.
 #test = pd.read_csv('./data/df_test.csv')
 
-test = pd.read_csv('C:/Users/RGRCH/Desktop/API/FM1_Predict_API/utils/data/df_test.csv')
+test = pd.read_csv('./data/df_test.csv')
 
 #print(test.info())
 

@@ -164,11 +164,11 @@ def _preprocess_data(data):
 
     return predict_vector
 
-test = pd.read_csv('C:/Users/RGRCH/Desktop/API/FM1_Predict_API/utils/data/df_test.csv')
+#test = pd.read_csv('C:/Users/RGRCH/Desktop/API/FM1_Predict_API/utils/data/df_test.csv')
 
-feature_vec_json = test.iloc[1].to_json()
-feature_vec_dict = json.loads(feature_vec_json)
-feature_vec_df = pd.DataFrame.from_dict([feature_vec_dict])
+#feature_vec_json = test.iloc[1].to_json()
+#feature_vec_dict = json.loads(feature_vec_json)
+#feature_vec_df = pd.DataFrame.from_dict([feature_vec_dict])
 
 #print(_preprocess_data(feature_vec_json)['Valencia_pressure'])
 
