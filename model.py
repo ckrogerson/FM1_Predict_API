@@ -27,6 +27,21 @@ import pandas as pd
 import pickle
 import json
 
+#bruh = pd.read_csv('C:/Users/RGRCH/Desktop/API/FM1_Predict_API/utils/data/df_test.csv')
+#bruh = df.drop(df.columns[0], axis=1)
+
+#print(bruh.info())
+
+#pred_vec = bruh[['Madrid_wind_speed','Bilbao_rain_1h','Valencia_wind_speed']]
+
+#print(pred_vec.info())
+
+#print(bruh)
+
+#model_load_path = "C:/Users/RGRCH/Desktop/API/FM1_Predict_API/assets/trained-models/rfr_model.pkl"
+#with open(model_load_path,'rb') as file:
+#    unpickled_model = pickle.load(file)
+
 def _preprocess_data(data):
     """Private helper function to preprocess data for model prediction.
 
@@ -49,6 +64,8 @@ def _preprocess_data(data):
     # Load the dictionary as a Pandas DataFrame.
     feature_vector_df = pd.DataFrame.from_dict([feature_vector_dict])
 
+    #print(feature_vector_df)
+
     # ---------------------------------------------------------------
     # NOTE: You will need to swap the lines below for your own data
     # preprocessing methods.
@@ -58,10 +75,102 @@ def _preprocess_data(data):
     # ---------------------------------------------------------------
 
     # ----------- Replace this code with your own preprocessing steps --------
-    predict_vector = feature_vector_df[['Madrid_wind_speed','Bilbao_rain_1h','Valencia_wind_speed']]
+    
+    #predict_vector = feature_vector_df[['Madrid_wind_speed','Bilbao_rain_1h','Valencia_wind_speed']]
+
+    predict_vector = feature_vector_df.copy()
+    
+    predict_vector = predict_vector.drop(predict_vector.columns[0], axis=1)
+    
+    if len(predict_vector) == 1:
+        predict_vector["Valencia_pressure"] = predict_vector["Valencia_pressure"].fillna(float(1000)) 
+    else:
+        predict_vector["Valencia_pressure"] = predict_vector["Valencia_pressure"].fillna(predict_vector["Valencia_pressure"].mode()[0])
+     
+    predict_vector = predict_vector.loc[:, ~predict_vector.columns.str.contains("temp_min")]
+    predict_vector = predict_vector.loc[:, ~predict_vector.columns.str.contains("temp_max")]
+    predict_vector["Valencia_wind_deg"] = predict_vector["Valencia_wind_deg"].str.extract('(\d+)')
+    predict_vector["Valencia_wind_deg"] = pd.to_numeric(predict_vector["Valencia_wind_deg"])
+    predict_vector["Seville_pressure"] = predict_vector["Seville_pressure"].str.extract('(\d+)')
+    predict_vector["Seville_pressure"] = pd.to_numeric(predict_vector["Seville_pressure"])
+
+    predict_vector["time"] = pd.to_datetime(predict_vector["time"])
+    predict_vector["Hour"] = predict_vector["time"].dt.hour
+    predict_vector["Day"] = predict_vector["time"].dt.day
+    predict_vector["Weekday"] = predict_vector["time"].dt.weekday
+    predict_vector["Week"] = predict_vector["time"].dt.isocalendar().week
+    predict_vector['Week'] = predict_vector['Week'].astype('int64')
+    predict_vector["Month"] = predict_vector["time"].dt.month
+    predict_vector["Year"] = predict_vector["time"].dt.year
+    predict_vector = predict_vector.drop(['time'], axis=1)
+
+    #print('BEFORE IF == 1')
+    #print(predict_vector.info())
+
+    seasons = {1: 'Winter',
+               2: 'Winter',
+               3: 'Winter',
+               4: 'Spring',
+               5: 'Spring',
+               6: 'Spring',
+               7: 'Summer',
+               8: 'Summer',
+               9: 'Summer',
+               10: 'Autumn',
+               11: 'Autumn',
+               12: 'Autumn',
+               }
+    
+    if len(predict_vector) == 1:
+        predict_vector['Season_Autumn'] = 0
+        predict_vector['Season_Spring'] = 0
+        predict_vector['Season_Summer'] = 0
+        predict_vector['Season_Winter'] = 0
+
+        #print('INSIDE IF == 1')
+        #print(predict_vector)
+
+        #print('LENGTH', len(predict_vector))
+
+        #print('ABOVE IS IMPORTANT')
+
+        if predict_vector['Month'].iloc[0] == (1 or 2 or 3):
+            predict_vector['Season_Winter'] = 1
+        elif predict_vector['Month'].iloc[0] == (4 or 5 or 6):
+            predict_vector['Season_Spring'] = 1
+        elif predict_vector['Month'].iloc[0] == (7 or 8 or 9):
+            predict_vector['Season_Summer'] = 1
+        elif predict_vector['Month'].iloc[0] == (10 or 11 or 12):
+            predict_vector['Season_Autumn'] = 1
+
+        #print('AFTER NEST')
+        #print(predict_vector)
+
+    else:
+        predict_vector['Season'] = predict_vector['Month'].apply(lambda x: seasons[x])
+        predict_vector = pd.get_dummies(predict_vector, columns=['Season'])
+        predict_vector.columns = [col.replace(" ","_") for col in predict_vector.columns]
+
+    
+
+    #predict_vector['Season_Autumn'] = predict_vector['Season_Autumn'].astype('int64')
+    #predict_vector['Season_Spring'] = predict_vector['Season_Spring'].astype('int64')
+    #predict_vector['Season_Summer'] = predict_vector['Season_Summer'].astype('int64')
+    #predict_vector['Season_Winter'] = predict_vector['Season_Winter'].astype('int64')
+
     # ------------------------------------------------------------------------
 
+    #print(predict_vector)
+
     return predict_vector
+
+test = pd.read_csv('C:/Users/RGRCH/Desktop/API/FM1_Predict_API/utils/data/df_test.csv')
+
+feature_vec_json = test.iloc[1].to_json()
+feature_vec_dict = json.loads(feature_vec_json)
+feature_vec_df = pd.DataFrame.from_dict([feature_vec_dict])
+
+#print(_preprocess_data(feature_vec_json)['Valencia_pressure'])
 
 def load_model(path_to_model:str):
     """Adapter function to load our pretrained model into memory.
