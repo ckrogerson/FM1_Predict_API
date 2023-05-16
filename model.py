@@ -104,47 +104,34 @@ def _preprocess_data(data):
     predict_vector["Year"] = predict_vector["time"].dt.year
     predict_vector = predict_vector.drop(['time'], axis=1)
 
-    #print('BEFORE IF == 1')
-    #print(predict_vector.info())
-
     seasons = {1: 'Winter',
                2: 'Winter',
-               3: 'Winter',
+               3: 'Spring',
                4: 'Spring',
                5: 'Spring',
-               6: 'Spring',
+               6: 'Summer',
                7: 'Summer',
                8: 'Summer',
-               9: 'Summer',
+               9: 'Autumn',
                10: 'Autumn',
                11: 'Autumn',
-               12: 'Autumn',
+               12: 'Winter',
                }
     
     if len(predict_vector) == 1:
-        predict_vector['Season_Autumn'] = 0
+        predict_vector['Season_Winter'] = 0
         predict_vector['Season_Spring'] = 0
         predict_vector['Season_Summer'] = 0
-        predict_vector['Season_Winter'] = 0
+        predict_vector['Season_Autumn'] = 0
 
-        #print('INSIDE IF == 1')
-        #print(predict_vector)
-
-        #print('LENGTH', len(predict_vector))
-
-        #print('ABOVE IS IMPORTANT')
-
-        if predict_vector['Month'].iloc[0] == (1 or 2 or 3):
+        if predict_vector['Month'].iloc[0] == (12 or 1 or 2):
             predict_vector['Season_Winter'] = 1
-        elif predict_vector['Month'].iloc[0] == (4 or 5 or 6):
+        elif predict_vector['Month'].iloc[0] == (3 or 4 or 5):
             predict_vector['Season_Spring'] = 1
-        elif predict_vector['Month'].iloc[0] == (7 or 8 or 9):
+        elif predict_vector['Month'].iloc[0] == (6 or 7 or 8):
             predict_vector['Season_Summer'] = 1
-        elif predict_vector['Month'].iloc[0] == (10 or 11 or 12):
+        elif predict_vector['Month'].iloc[0] == (9 or 10 or 11):
             predict_vector['Season_Autumn'] = 1
-
-        #print('AFTER NEST')
-        #print(predict_vector)
 
     else:
         predict_vector['Season'] = predict_vector['Month'].apply(lambda x: seasons[x])
@@ -152,15 +139,12 @@ def _preprocess_data(data):
         predict_vector.columns = [col.replace(" ","_") for col in predict_vector.columns]
 
     
-
-    #predict_vector['Season_Autumn'] = predict_vector['Season_Autumn'].astype('int64')
-    #predict_vector['Season_Spring'] = predict_vector['Season_Spring'].astype('int64')
-    #predict_vector['Season_Summer'] = predict_vector['Season_Summer'].astype('int64')
-    #predict_vector['Season_Winter'] = predict_vector['Season_Winter'].astype('int64')
+    predict_vector['Season_Winter'] = predict_vector['Season_Winter'].astype('int64')
+    predict_vector['Season_Spring'] = predict_vector['Season_Spring'].astype('int64')
+    predict_vector['Season_Summer'] = predict_vector['Season_Summer'].astype('int64')
+    predict_vector['Season_Autumn'] = predict_vector['Season_Autumn'].astype('int64')
 
     # ------------------------------------------------------------------------
-
-    #print(predict_vector)
 
     return predict_vector
 
@@ -169,8 +153,6 @@ def _preprocess_data(data):
 #feature_vec_json = test.iloc[1].to_json()
 #feature_vec_dict = json.loads(feature_vec_json)
 #feature_vec_df = pd.DataFrame.from_dict([feature_vec_dict])
-
-#print(_preprocess_data(feature_vec_json)['Valencia_pressure'])
 
 def load_model(path_to_model:str):
     """Adapter function to load our pretrained model into memory.
