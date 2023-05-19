@@ -78,10 +78,14 @@ def _preprocess_data(data):
     
     #predict_vector = feature_vector_df[['Madrid_wind_speed','Bilbao_rain_1h','Valencia_wind_speed']]
 
+    # First make a copy
+
     predict_vector = feature_vector_df.copy()
     
-    predict_vector = predict_vector.drop(predict_vector.columns[0], axis=1)
+    predict_vector = predict_vector.drop(predict_vector.columns[0], axis=1) # Removing 'Unnamed : 0' feature
     
+    # In the case of one observation and the value being null
+
     if len(predict_vector) == 1:
         predict_vector["Valencia_pressure"] = predict_vector["Valencia_pressure"].fillna(float(1000)) 
     else:
@@ -89,12 +93,18 @@ def _preprocess_data(data):
      
     predict_vector = predict_vector.loc[:, ~predict_vector.columns.str.contains("temp_min")]
     predict_vector = predict_vector.loc[:, ~predict_vector.columns.str.contains("temp_max")]
+    
+    # Extracting numerical data from categorical features
+
     predict_vector["Valencia_wind_deg"] = predict_vector["Valencia_wind_deg"].str.extract('(\d+)')
     predict_vector["Valencia_wind_deg"] = pd.to_numeric(predict_vector["Valencia_wind_deg"])
     predict_vector["Seville_pressure"] = predict_vector["Seville_pressure"].str.extract('(\d+)')
     predict_vector["Seville_pressure"] = pd.to_numeric(predict_vector["Seville_pressure"])
+    
+    predict_vector["time"] = pd.to_datetime(predict_vector["time"]) # Converting 'time' feature to a datetime object
 
-    predict_vector["time"] = pd.to_datetime(predict_vector["time"])
+    # Extracting 'time' data
+
     predict_vector["Hour"] = predict_vector["time"].dt.hour
     predict_vector["Day"] = predict_vector["time"].dt.day
     predict_vector["Weekday"] = predict_vector["time"].dt.weekday
@@ -102,7 +112,10 @@ def _preprocess_data(data):
     predict_vector['Week'] = predict_vector['Week'].astype('int64')
     predict_vector["Month"] = predict_vector["time"].dt.month
     predict_vector["Year"] = predict_vector["time"].dt.year
-    predict_vector = predict_vector.drop(['time'], axis=1)
+    
+    predict_vector = predict_vector.drop(['time'], axis=1) # Removing original 'time' feature
+
+    # Creation of 'Season' feature
 
     seasons = {1: 'Winter',
                2: 'Winter',
@@ -118,6 +131,8 @@ def _preprocess_data(data):
                12: 'Winter',
                }
     
+    # Simulating creation of dummy features in the case of 1 observation
+
     if len(predict_vector) == 1:
         predict_vector['Season_Winter'] = 0
         predict_vector['Season_Spring'] = 0
@@ -134,10 +149,14 @@ def _preprocess_data(data):
             predict_vector['Season_Autumn'] = 1
 
     else:
+        
+        # Standard procedure for creating dummy features
+
         predict_vector['Season'] = predict_vector['Month'].apply(lambda x: seasons[x])
         predict_vector = pd.get_dummies(predict_vector, columns=['Season'])
         predict_vector.columns = [col.replace(" ","_") for col in predict_vector.columns]
 
+    # Converting to int64
     
     predict_vector['Season_Winter'] = predict_vector['Season_Winter'].astype('int64')
     predict_vector['Season_Spring'] = predict_vector['Season_Spring'].astype('int64')
